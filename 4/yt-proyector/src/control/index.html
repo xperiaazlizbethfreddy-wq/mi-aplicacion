@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://i.ytimg.com data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YT Proyector – Panel de control</title>
+  <link rel="stylesheet" href="control.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">▶</span> YT Proyector</div>
+    <form id="addForm" class="addbar" autocomplete="off">
+      <input id="urlInput" type="text" spellcheck="false" placeholder="Pega aquí un enlace de YouTube (video o lista de reproducción)…">
+      <button id="addBtn" class="btn primary" type="submit">Agregar</button>
+    </form>
+    <button id="presentBtn" class="btn" type="button" title="Modo presentación: pantalla completa y sin avisos">🖥 Modo presentación</button>
+  </header>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <main class="layout">
+    <!-- Lista de reproducción -->
+    <section class="panel queue">
+      <div class="panel-head">
+        <h2>Lista de reproducción</h2>
+        <span id="queueCount" class="muted"></span>
+      </div>
+      <div class="filters">
+        <input id="searchInput" type="search" placeholder="Buscar por título…">
+        <select id="filterSelect" aria-label="Filtrar por estado">
+          <option value="all">Todos</option>
+          <option value="current">Actual</option>
+          <option value="pending">Pendientes</option>
+          <option value="played">Reproducidos</option>
+          <option value="error">Con error</option>
+        </select>
+      </div>
+      <ul id="queueList" class="queue-list"></ul>
+      <div id="queueEmpty" class="empty">La lista está vacía.<br>Pega un enlace arriba para empezar.</div>
+      <div class="panel-foot">
+        <button id="saveListBtn" class="btn small" type="button">💾 Guardar lista</button>
+        <button id="clearBtn" class="btn small danger" type="button">🗑 Vaciar lista</button>
+      </div>
+    </section>
+
+    <!-- Video actual y controles -->
+    <section class="panel center">
+      <div class="now">
+        <div class="thumb-wrap"><img id="nowThumb" alt="" hidden><div id="nowThumbEmpty" class="thumb-empty">Sin video seleccionado</div></div>
+        <div class="now-info">
+          <div class="muted small">Video actual <span id="nowPos"></span></div>
+          <h1 id="nowTitle">—</h1>
+          <div id="nowNext" class="muted small"></div>
+          <div id="nowError" class="error-box" hidden></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="prevBtn" class="btn ctl" type="button" title="Video anterior">⏮<span>Anterior</span></button>
+        <button id="backBtn" class="btn ctl" type="button" title="Retroceder 10 segundos">⏪<span>−10 s</span></button>
+        <button id="playBtn" class="btn ctl big primary" type="button" title="Reproducir / Pausar">▶<span>Reproducir</span></button>
+        <button id="fwdBtn" class="btn ctl" type="button" title="Avanzar 10 segundos">⏩<span>+10 s</span></button>
+        <button id="nextBtn" class="btn ctl" type="button" title="Siguiente video">⏭<span>Siguiente</span></button>
+      </div>
+      <div class="controls secondary">
+        <button id="restartBtn" class="btn" type="button">⟲ Reiniciar</button>
+        <button id="stopBtn" class="btn" type="button">⏹ Detener</button>
+        <button id="retryBtn" class="btn" type="button" hidden>↻ Reintentar</button>
+      </div>
+
+      <div class="row-options">
+        <label class="check"><input id="autoplayChk" type="checkbox"> Reproducir el siguiente automáticamente</label>
+        <div class="seg" role="group" aria-label="Repetición">
+          <button class="seg-btn" data-repeat="off" type="button">Sin repetir</button>
+          <button class="seg-btn" data-repeat="one" type="button">🔂 Video</button>
+          <button class="seg-btn" data-repeat="all" type="button">🔁 Lista</button>
+        </div>
+      </div>
+
+      <div class="volume">
+        <button id="muteBtn" class="btn" type="button" title="Silenciar / activar sonido">🔊</button>
+        <button id="volDownBtn" class="btn" type="button" title="Bajar volumen">−</button>
+        <input id="volRange" type="range" min="0" max="100" step="1" aria-label="Volumen">
+        <button id="volUpBtn" class="btn" type="button" title="Subir volumen">+</button>
+        <span id="volText" class="muted">80%</span>
+      </div>
+    </section>
+
+    <!-- Configuración -->
+    <aside class="panel side">
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="screen" type="button">Pantalla</button>
+        <button class="tab" data-tab="lists" type="button">Listas</button>
+        <button class="tab" data-tab="history" type="button">Historial</button>
+        <button class="tab" data-tab="keys" type="button">Atajos</button>
+      </nav>
+
+      <div class="tabpane" data-pane="screen">
+        <label class="field">Pantalla de destino
+          <select id="displaySelect"></select>
+        </label>
+        <button id="detectBtn" class="btn small" type="button">🔍 Detectar pantallas</button>
+        <div class="btn-grid">
+          <button id="dispOpenBtn" class="btn" type="button">Abrir</button>
+          <button id="dispCloseBtn" class="btn" type="button">Cerrar</button>
+          <button id="dispReconnectBtn" class="btn" type="button">Volver a conectar</button>
+          <button id="dispFsBtn" class="btn primary" type="button">⛶ Pantalla completa</button>
+        </div>
+        <label class="check"><input id="fsOnOpenChk" type="checkbox"> Abrir en pantalla completa si hay otra pantalla</label>
+        <label class="check"><input id="resumeChk" type="checkbox"> Retomar el video al iniciar la aplicación</label>
+        <hr>
+        <label class="field">Clave de la API de YouTube Data (opcional)
+          <input id="apiKeyInput" type="password" placeholder="Solo para listas largas" autocomplete="off">
+        </label>
+        <button id="apiKeyBtn" class="btn small" type="button">Guardar clave</button>
+        <p id="apiKeyHint" class="muted small"></p>
+        <p class="muted small">Pantalla inalámbrica: conéctala primero con Windows (Win + K) y luego selecciónala aquí.</p>
+      </div>
+
+      <div class="tabpane" data-pane="lists" hidden>
+        <p class="muted small">Listas guardadas. Elige una para cargarla o continuar desde un video.</p>
+        <ul id="savedList" class="plain-list"></ul>
+      </div>
+
+      <div class="tabpane" data-pane="history" hidden>
+        <div class="row-between"><span class="muted small">Videos reproducidos</span><button id="clearHistBtn" class="btn small" type="button">Borrar</button></div>
+        <ul id="historyList" class="plain-list"></ul>
+      </div>
+
+      <div class="tabpane" data-pane="keys" hidden>
+        <p class="muted small">Haz clic en un atajo y pulsa la nueva combinación. No actúan mientras escribes en un campo de texto.</p>
+        <table id="keysTable" class="keys"></table>
+        <button id="keysResetBtn" class="btn small" type="button">Restablecer atajos</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="statusbar">
+    <span id="statusChip" class="chip">Detenido</span>
+    <span id="screenChip" class="chip">Pantalla: sin abrir</span>
+    <span id="netChip" class="chip ok">En línea</span>
+    <span id="timeNow" class="time">0:00</span>
+    <input id="seekRange" type="range" min="0" max="1000" value="0" aria-label="Progreso del video">
+    <span id="timeTotal" class="time">0:00</span>
+  </footer>
+
+  <div id="modalRoot"></div>
+  <script src="control.js"></script>
+</body>
+</html>
